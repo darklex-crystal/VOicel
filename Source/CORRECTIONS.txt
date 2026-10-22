@@ -1,0 +1,24 @@
+Voicel - corrections du plantage (revue de code + tests DSP sous ASan/UBSan)
+
+MicCapture.h/.cpp
+ - L'anneau audio etait REALLOUE (ring_.reset) quand le micro demarrait, pendant que le
+   fil audio de l'hote le lisait -> acces memoire invalide. Il est desormais alloue une
+   seule fois (131072 echantillons) et tous les indices/taux sont atomiques.
+ - getDeviceNames (false) renvoyait les SORTIES : le "micro" ouvert etait un peripherique
+   de sortie. Corrige (true).
+ - Les pilotes ASIO sont exclus du balayage (charger les DLL ASIO depuis un plug-in
+   peut bloquer/planter l'hote).
+ - Le micro n'est plus rouvert/ferme inutilement.
+VoiceInstrumentProcessor.cpp
+ - releaseResources() fermait le micro (Live l'appelle a chaque arret) et rien ne le
+   rouvrait. Il reste ouvert, ferme au destructeur.
+VoiceEngine.cpp
+ - Garde contre les blocs plus grands que maximumExpectedSamplesPerBlock (ecriture hors tampon).
+ - Pitch bend du synthe interne: etait fixe a +/-12 demi-tons, maintenant coherent avec la plage choisie.
+ - Evenements MIDI d'un meme bloc repartis dans le bloc (ils s'empilaient au meme echantillon).
+VoiceToMidiEditor.h/.cpp
+ - Panneaux/boutons crees avec new sans jamais etre liberes -> proprietaires (unique_ptr / OwnedArray).
+ - jlimit() avec arguments dans le mauvais ordre (assertion possible en Debug).
+ - Garde dans GroupPanel::paint (acces captionAreas_ avant resized).
+NoteTracker.cpp
+ - Historique d'octave non borne dans une branche (croissance memoire + allocation par trame).

@@ -1,0 +1,8 @@
+Voicel - dossier pret pour GitHub
+
+1. Dezippe ce fichier.
+2. Sur GitHub, dans ton depot : Add file > Upload files.
+3. Glisse TOUT le contenu du dossier "voicel" (Source, Tools, .github, CMakeLists.txt).
+4. Commit changes.
+5. Onglet Actions > "Build Windows VST3 (MSVC)" > Run workflow.
+6. Telecharge l'artefact "Voicel-VST3-Windows-MSVC" une fois termine.
