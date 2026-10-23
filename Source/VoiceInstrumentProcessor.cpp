@@ -1,6 +1,7 @@
 #include "VoiceInstrumentProcessor.h"
 
 #include "VoiceToMidiEditor.h"
+#include "DebugLog.h"
 
 namespace vm
 {
@@ -10,6 +11,7 @@ VoiceInstrumentProcessor::VoiceInstrumentProcessor()
                                .withOutput ("Sortie", juce::AudioChannelSet::stereo(), true)),
       engine_ (state_)
 {
+    dbg ("VoiceInstrumentProcessor: constructeur");
 }
 
 VoiceInstrumentProcessor::~VoiceInstrumentProcessor()
@@ -19,6 +21,7 @@ VoiceInstrumentProcessor::~VoiceInstrumentProcessor()
 
 void VoiceInstrumentProcessor::prepareToPlay (double sampleRate, int maximumExpectedSamplesPerBlock)
 {
+    dbg ("prepareToPlay: " + juce::String (sampleRate) + " Hz, bloc " + juce::String (maximumExpectedSamplesPerBlock));
     engine_.prepare (sampleRate, maximumExpectedSamplesPerBlock);
     mic_.prepare (sampleRate, maximumExpectedSamplesPerBlock);
     currentLatency_ = -1;
@@ -40,6 +43,9 @@ void VoiceInstrumentProcessor::reset()
 void VoiceInstrumentProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
 {
     juce::ScopedNoDenormals noDenormals;
+
+    static bool firstBlock = true;
+    if (firstBlock) { firstBlock = false; dbg ("processBlock: premier bloc"); }
 
     const int numSamples = buffer.getNumSamples();
     const int numOut     = getChannelCountOfBus (false, 0);
@@ -109,6 +115,7 @@ void VoiceInstrumentProcessor::setStateInformation (const void* data, int sizeIn
 
 juce::AudioProcessorEditor* VoiceInstrumentProcessor::createEditor()
 {
+    dbg ("createEditor");
     return new vm::VoiceToMidiEditor (*this);
 }
 

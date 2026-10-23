@@ -1,4 +1,5 @@
 #include "VoiceToMidiEditor.h"
+#include "DebugLog.h"
 
 #include <cmath>
 
@@ -27,10 +28,13 @@ namespace
     const juce::String& preferredFamily()
     {
         static juce::String family = [] {
+            dbg ("preferredFamily: findAllTypefaceNames...");
             static const char* candidates[] = { "Inter", "Noto Sans", "DejaVu Sans",
                                                 "Liberation Sans", "Segoe UI",
                                                 "Helvetica Neue", "Arial", "Helvetica" };
             const auto available = juce::Font::findAllTypefaceNames();
+            dbg ("preferredFamily: polices listees");
+
             for (auto* name : candidates)
                 if (available.contains (name))
                     return juce::String (name);
@@ -411,6 +415,8 @@ void PitchDisplay::paintTrace (juce::Graphics& g, const juce::Rectangle<float>& 
 
 void PitchDisplay::paint (juce::Graphics& g)
 {
+    static int paintCount = 0;
+    if (paintCount < 3) dbg ("PitchDisplay::paint #" + juce::String (++paintCount));
     const auto bounds = getLocalBounds().toFloat();
     g.fillAll (kBackground);
 
@@ -433,6 +439,7 @@ void PitchDisplay::paint (juce::Graphics& g)
     paintGrid (g, area, gridLo, gridHi);
     paintNotes (g, area, snapshot_, gridLo, gridHi);
     paintTrace (g, area, snapshot_, gridLo, gridHi);
+    if (paintCount <= 3) dbg ("PitchDisplay::paint: traces dessinees");
 
     // Jauge de niveau
     const float meterY = bounds.getBottom() - 4.0f;
@@ -461,16 +468,20 @@ VoiceToMidiEditor::VoiceToMidiEditor (VoicelProcessorBase& p)
       proc_ (p),
       state_ (p.getState())
 {
+    dbg ("Editeur: constructeur");
     look_ = std::make_unique<Look>();
     setLookAndFeel (look_.get());
 
     buildInterface();
+    dbg ("Editeur: interface construite");
 
     setResizable (true, true);
     setResizeLimits (960, 640, 1800, 1200);
     setSize (1220, 780);
+    dbg ("Editeur: setSize fait");
 
     startTimerHz (30);
+    dbg ("Editeur: constructeur termine");
 }
 
 VoiceToMidiEditor::~VoiceToMidiEditor()
@@ -581,6 +592,8 @@ void VoiceToMidiEditor::buildInterface()
 
 void VoiceToMidiEditor::paint (juce::Graphics& g)
 {
+    static int paintCount = 0;
+    if (paintCount < 3) dbg ("Editeur::paint #" + juce::String (++paintCount));
     g.fillAll (kBackground);
 
     auto bounds = getLocalBounds().toFloat().reduced (14.0f);

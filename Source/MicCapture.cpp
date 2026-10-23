@@ -1,4 +1,5 @@
 #include "MicCapture.h"
+#include "DebugLog.h"
 
 #include <cstdio>
 
@@ -22,16 +23,27 @@ namespace
     {
         std::vector<InputEntry> entries;
 
+        dbg ("listInputs: debut (getAvailableDeviceTypes)");
+
         for (auto* type : manager.getAvailableDeviceTypes())
         {
+            dbg ("listInputs: type " + type->getTypeName());
+
             if (type->getTypeName().containsIgnoreCase ("ASIO"))
                 continue;
 
+            dbg ("listInputs:   scanForDevices...");
             type->scanForDevices();
+            dbg ("listInputs:   getDeviceNames...");
 
             for (const auto& name : type->getDeviceNames (true))
+            {
+                dbg ("listInputs:   entree: " + name);
                 entries.push_back ({ type, name });
+            }
         }
+
+        dbg ("listInputs: fin");
 
         return entries;
     }
@@ -83,7 +95,9 @@ bool MicCapture::openInput (int index)
     const auto chosenType   = entries[static_cast<size_t> (index)].type->getTypeName();
     const auto chosenDevice = entries[static_cast<size_t> (index)].name;
 
+    dbg ("openInput: setCurrentAudioDeviceType " + chosenType);
     manager_.setCurrentAudioDeviceType (chosenType, true);
+    dbg ("openInput: setCurrentAudioDeviceType ok");
 
     auto setup = manager_.getAudioDeviceSetup();
     setup.inputDeviceName          = chosenDevice;
@@ -94,7 +108,9 @@ bool MicCapture::openInput (int index)
     setup.sampleRate  = hostRate_.load();
     setup.bufferSize  = 256;
 
+    dbg ("openInput: setAudioDeviceSetup " + chosenDevice);
     error_ = manager_.setAudioDeviceSetup (setup, true);
+    dbg ("openInput: setAudioDeviceSetup fini, erreur='" + error_ + "'");
 
     if (! error_.isEmpty())
     {
@@ -108,7 +124,9 @@ bool MicCapture::openInput (int index)
         return false;
     }
 
+    dbg ("openInput: addAudioCallback");
     manager_.addAudioCallback (this);
+    dbg ("openInput: micro ouvert");
     opened_ = true;
     return true;
 }
@@ -186,6 +204,7 @@ void MicCapture::fill (float* dest, int numSamples)
 
 void MicCapture::audioDeviceAboutToStart (juce::AudioIODevice* device)
 {
+    dbg ("audioDeviceAboutToStart");
     // Pas de réallocation : voir FloatRing.
     ring_.clear();
     resync_.store (true);
@@ -241,6 +260,7 @@ void MicCapture::audioDeviceIOCallbackWithContext (const float* const* inputData
 MicPanel::MicPanel (MicCapture& capture, VoiceEngine& engine)
     : capture_ (capture), engine_ (engine)
 {
+    dbg ("MicPanel: constructeur");
     deviceCombo_.onChange = [this]
     {
         const int id = deviceCombo_.getSelectedId();
@@ -277,7 +297,9 @@ MicPanel::~MicPanel()
 
 void MicPanel::refreshDevices()
 {
+    dbg ("MicPanel::refreshDevices: debut");
     devices_ = capture_.getInputNames();
+    dbg ("MicPanel::refreshDevices: liste obtenue");
     deviceCombo_.clear (juce::dontSendNotification);
 
     if (devices_.isEmpty())
@@ -300,6 +322,7 @@ void MicPanel::refreshDevices()
         capture_.openInput (0);
 
     updateStatus();
+    dbg ("MicPanel::refreshDevices: fin");
 }
 
 void MicPanel::setStatus (const juce::String& text)
