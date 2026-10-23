@@ -331,7 +331,10 @@ void PitchDisplay::paintNotes (juce::Graphics& g, const juce::Rectangle<float>& 
         }
         else
         {
-            ++j;
+            // Pas de note sur cette trame : on avance. (Avant, seul j etait
+            // incremente, jamais i : boucle infinie des que la trace ne
+            // contenait aucune note, donc des l'ouverture de la fenetre.)
+            ++i;
             continue;
         }
 
