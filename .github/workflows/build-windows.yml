@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: windows-2022
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -28,11 +29,13 @@ jobs:
       - name: Tests hors-ligne
         shell: bash
         continue-on-error: true
+        timeout-minutes: 3
         run: |
           ./build/VoicelDspTest_artefacts/Release/VoicelDspTest.exe
           ./build/VoicelInstrumentTest_artefacts/Release/VoicelInstrumentTest.exe
 
       - name: Publier les plug-ins VST3
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Voicel-VST3-Windows-MSVC
